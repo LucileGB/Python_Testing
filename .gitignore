@@ -1,7 +1,14 @@
+__pycache__
+.coverage
+.env
+.envrc
+.flaskenv
+.Python
 bin
+htmlcov/
 include
 lib
-.Python
+locustfile.py
 tests/
-.envrc
-__pycache__
+test_clubs.json
+test_competitions.json
