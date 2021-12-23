@@ -1,5 +1,6 @@
 import datetime
 import json
+import math
 import shutil
 
 from os import environ
@@ -8,6 +9,7 @@ from flask import Flask, render_template, request, redirect, flash, url_for, ses
 ########################## UTILITIES #################################
 # Global variables
 MAX_BOOKED_PLACES = 12
+PLACE_COST = 3
 DB_CLUBS = 'clubs.json'
 DB_COMP = 'competitions.json'
 
@@ -48,10 +50,10 @@ def already_booked(club, competition):
     return 0
 
 def return_smallest(club, competition, max_selector):
-    club_points = int(club["points"])
+    can_buy = int(math.floor(float(club["points"])/PLACE_COST))
     available_places = int(competition["numberOfPlaces"])
 
-    return min([club_points, available_places, max_selector])
+    return min([can_buy, available_places, max_selector])
 
 
 # Json db utility functions
@@ -127,7 +129,6 @@ def book(competition, club):
     found_club = [c for c in clubs if c['name'] == club][0]
     found_competition = [c for c in competitions if c['name'] == competition][0]
     max_selector = MAX_BOOKED_PLACES
-    available_points = int(found_club['points'])
     places_booked = already_booked(found_club, found_competition)
 
     try:
@@ -187,7 +188,7 @@ def purchase_places():
 
             if places_required <= double_check and places_required > 0:
                 competition['numberOfPlaces'] = str(int(competition['numberOfPlaces']) - places_required)
-                club['points'] = str(int(club['points']) - places_required)
+                club['points'] = str(int(club['points']) - places_required*PLACE_COST)
 
                 if places_booked == 0:
                     club['competitions'].append({'name': competition['name'],
