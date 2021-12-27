@@ -13,14 +13,18 @@
 
     * [Flask](https://flask.palletsprojects.com/en/1.1.x/)
 
-        Whereas Django does a lot of things for us out of the box, Flask allows us to add only what we need. 
-     
+        Please note that we use Flask v.1.1, which is not the latest version. As such, do not try to upgrade any library without checking compatibility.
+
 
     * [Virtual environment](https://virtualenv.pypa.io/en/stable/installation.html)
 
         This ensures you'll be able to install the correct packages without interfering with Python on your machine.
 
-        Before you begin, please ensure you have this installed globally. 
+        Before you begin, please ensure you have this installed globally.
+
+    * [Pytest](https://docs.pytest.org/en/6.2.x/)
+
+        We use pytest for testing.
 
 
 3. Installation
@@ -31,21 +35,25 @@
 
     - Rather than hunting around for the packages you need, you can install in one step. Type <code>pip install -r requirements.txt</code>. This will install all the packages listed in the respective file. If you install a package, make sure others know by updating the requirements.txt file. An easy way to do this is <code>pip freeze > requirements.txt</code>
 
-    - Flask requires that you set an environmental variable to the python file. However you do that, you'll want to set the file to be <code>server.py</code>. Check [here](https://flask.palletsprojects.com/en/1.1.x/quickstart/#a-minimal-application) for more details
+    - Environment variables are already set in the .env and .flaskenv files.
 
     - You should now be ready to test the application. In the directory, type either <code>flask run</code> or <code>python -m flask run</code>. The app should respond with an address you should be able to go to using your browser.
 
 4. Current Setup
 
     The app is powered by [JSON files](https://www.tutorialspoint.com/json/json_quick_guide.htm). This is to get around having a DB until we actually need one. The main ones are:
-     
+
     * competitions.json - list of competitions
     * clubs.json - list of clubs with relevant information. You can look here to see what email addresses the app will accept for login.
 
 5. Testing
 
-    You are free to use whatever testing framework you like-the main thing is that you can show what tests you are using.
+    We use [Pytest](https://docs.pytest.org/en/6.2.x/) for testing, as well as [coverage](https://coverage.readthedocs.io/en/coverage-5.1/) to check what code is covered by our test.
 
-    We also like to show how well we're testing, so there's a module called 
-    [coverage](https://coverage.readthedocs.io/en/coverage-5.1/) you should add to your project.
+    To launch testing, please ensure that the MODE variable in the .env file is set to 'TESTING'.
 
+    Use the console to navigate to the app's folder after activating your virtual environment, then run the command <code>pytest</code> on Windows or <code>python3 pytest</code> on other operating systems.
+
+    To run Coverage, navigate to the app's folder and then type the command <code>coverage run -m pytest</code>.
+
+    To run [Locust](https://github.com/locustio/locust/tree/1.2.3) so as to check performance, navigate to the app's folder and type <code>locust</code>. Then, go to the page http://localhost:8089 on your browser.
