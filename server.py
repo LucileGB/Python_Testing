@@ -153,8 +153,6 @@ def book(competition, club):
                     elif places_booked >= 0:
                         # Substract booked places (if any) from the MAX limit for that club.
                         max_selector = MAX_BOOKED_PLACES - places_booked
-                        print(found_club)
-                        print(found_competition)
                         max_selector = return_smallest(found_club, found_competition,
                                                         max_selector)
 
@@ -193,8 +191,6 @@ def purchase_places():
     club = [c for c in clubs if c['name'] == request.form['club']][0]
     places_required = int(request.form['places'])
     places_booked = already_booked(club, competition)
-
-    print("\n\nCAREFUL! PURCHASE IS OCCURING!\n\n")
 
     try:
         if session["user_id"] == club["email"]:

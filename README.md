@@ -57,3 +57,9 @@
     To run Coverage, navigate to the app's folder and then type the command <code>coverage run -m pytest</code>.
 
     To run [Locust](https://github.com/locustio/locust/tree/1.2.3) so as to check performance, navigate to the app's folder and type <code>locust</code>. Then, go to the page http://localhost:8089 on your browser.
+
+6. General conventions
+
+    We follow the python naming convention, which means that class names use pascalcase (MyClassName), functions use under_score (my_function_name) and constant use capslocks (CONSTANT).
+
+    For general formating, we use the PEP, though with more liberal # commenting for clarity's sake.
