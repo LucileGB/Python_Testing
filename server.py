@@ -13,6 +13,7 @@ PLACE_COST = 3
 DB_CLUBS = 'clubs.json'
 DB_COMP = 'competitions.json'
 
+
 # General utility functions
 def load_config(mode=environ.get('MODE')):
     try:
@@ -29,7 +30,7 @@ def load_config(mode=environ.get('MODE')):
             DB_COMP = environ.get('DB_COMP', 'test_competitions.json')
 
         else:
-            print('Problem with .env file.')
+            print('Cannot load .env file.')
 
     except ImportError as e:
         print(e)
@@ -38,7 +39,8 @@ def load_config(mode=environ.get('MODE')):
 def already_booked(club, competition):
     """Check if the selected club already booked places in the competition by
     checking the length of its 'competitions' key in the db. If it's above 0,
-    check if the competition is in the list and return the number of places. Else, return 0."""
+    check if the competition is in the list and return the number of places.
+    Else, return 0."""
     if len(club["competitions"]) > 0:
         booked_list = [competition['name'] for competition in club['competitions']]
         if competition["name"] in booked_list:
@@ -48,6 +50,7 @@ def already_booked(club, competition):
             return int(comp["places"])
 
     return 0
+
 
 def return_smallest(club, competition, max_selector):
     can_buy = int(math.floor(float(club["points"])/PLACE_COST))
@@ -59,19 +62,22 @@ def return_smallest(club, competition, max_selector):
 # Json db utility functions
 def load_clubs():
     with open(DB_CLUBS) as c:
-         list_of_clubs = json.load(c)['clubs']
-         return list_of_clubs
+        list_of_clubs = json.load(c)['clubs']
+        return list_of_clubs
+
 
 def load_competitions():
     with open(DB_COMP) as comps:
-         list_of_competitions = json.load(comps)['competitions']
-         return list_of_competitions
+        list_of_competitions = json.load(comps)['competitions']
+        return list_of_competitions
+
 
 def update_clubs(content):
-    open(DB_CLUBS,'w').write(content)
+    open(DB_CLUBS, 'w').write(content)
+
 
 def update_competitions(content):
-    open(DB_COMP,'w').write(content)
+    open(DB_COMP, 'w').write(content)
 
 ########################## FLASK SPECIFICS #################################
 # Global variables
@@ -88,10 +94,12 @@ def index():
     """Shows the form whose data will inform show_summary()"""
     return render_template('index.html')
 
+
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('index'))
+
 
 @app.route('/showSummary', methods=['POST'])
 def show_summary():
@@ -104,14 +112,14 @@ def show_summary():
         email = request.form["email"]
         error = None
         try:
-            user = [club for club in clubs if club['email'] == request.form['email']][0]
-        except:
+            user = [club for club in clubs if club['email'] == email][0]
+        except Exception:
             error = "Identifiants incorrects ou inexistants."
 
         if error is None:
             session.clear()
             session["user_id"] = user["email"]
-            club = [club for club in clubs if club['email'] == request.form['email']][0]
+            club = [club for club in clubs if club['email'] == email][0]
             past_competitions = [comp for comp in competitions
                 if datetime.datetime.fromisoformat(comp['date']) < datetime.datetime.now()]
 
@@ -120,6 +128,7 @@ def show_summary():
 
         flash(error)
         return redirect(url_for('index'))
+
 
 @app.route('/book/<competition>/<club>')
 def book(competition, club):
@@ -131,32 +140,40 @@ def book(competition, club):
     max_selector = MAX_BOOKED_PLACES
     places_booked = already_booked(found_club, found_competition)
 
-    try:
-        if found_club and found_competition and session["user_id"] == found_club["email"]:
-            # Check that the url is valid and that the right club is booking
-            if datetime.datetime.fromisoformat(found_competition['date']) > datetime.datetime.now():
-                # Check that the competition has not occured yet.
-                if places_booked == MAX_BOOKED_PLACES:
-                    #Check that the club has not booked more than its allowed maximum.
-                    flash(f"You have already booked {MAX_BOOKED_PLACES} places!")
-                    return redirect(url_for('full_display'))
+    if found_club and found_competition:
+        try:
+            if session["user_id"] == found_club["email"]:
+                if datetime.datetime.fromisoformat(found_competition['date']) > datetime.datetime.now():
+                    # Check that the competition has not occured yet.
+                    if places_booked == MAX_BOOKED_PLACES:
+                        # Check that the club has not booked more than its allowed maximum.
+                        flash(f"You have already booked {MAX_BOOKED_PLACES} places!")
+                        return redirect(url_for('full_display'))
 
-                elif places_booked >= 0:
-                    # Substract booked places (if any) from the MAX limit for that club.
-                    max_selector = MAX_BOOKED_PLACES - places_booked
-                    max_selector = return_smallest(found_club, found_competition, max_selector)
+                    elif places_booked >= 0:
+                        # Substract booked places (if any) from the MAX limit for that club.
+                        max_selector = MAX_BOOKED_PLACES - places_booked
+                        print(found_club)
+                        print(found_competition)
+                        max_selector = return_smallest(found_club, found_competition,
+                                                        max_selector)
 
-                return render_template('booking.html',club=found_club, competition=found_competition, max_selector=max_selector)
+                    return render_template('booking.html', club=found_club,
+                                            competition=found_competition,
+                                            max_selector=max_selector)
 
+                else:
+                    flash("You cannot book places for a past event.")
+                    return render_template('welcome.html', club=found_club,
+                                            competitions=competitions)
             else:
-                flash("You cannot book places for a past event.")
-                return render_template('welcome.html', club=found_club, competitions=competitions)
+                flash("You are not logged in.")
+                return redirect(url_for('index'))
 
-        else:
+        except Exception:
             flash("Something went wrong - please try again")
             return redirect(url_for('index'))
-
-    except:
+    else:
         flash("Something went wrong - please try again")
         return redirect(url_for('index'))
 
@@ -171,11 +188,13 @@ def purchase_places():
     global clubs
 
     past_competitions = [comp for comp in competitions
-        if datetime.datetime.fromisoformat(comp['date']) < datetime.datetime.now()]
+            if datetime.datetime.fromisoformat(comp['date']) < datetime.datetime.now()]
     competition = [c for c in competitions if c['name'] == request.form['competition']][0]
     club = [c for c in clubs if c['name'] == request.form['club']][0]
     places_required = int(request.form['places'])
     places_booked = already_booked(club, competition)
+
+    print("\n\nCAREFUL! PURCHASE IS OCCURING!\n\n")
 
     try:
         if session["user_id"] == club["email"]:
@@ -187,12 +206,15 @@ def purchase_places():
             double_check = return_smallest(club, competition, MAX_BOOKED_PLACES)
 
             if places_required <= double_check and places_required > 0:
+                # If conditions are met, validate the purchase.
                 competition['numberOfPlaces'] = str(int(competition['numberOfPlaces']) - places_required)
                 club['points'] = str(int(club['points']) - places_required*PLACE_COST)
 
                 if places_booked == 0:
+                    # If it's the first time the club is booking places, add it
+                    # to the club's competitions list in the database.
                     club['competitions'].append({'name': competition['name'],
-                                                                        'places': str(places_required)})
+                                                'places': str(places_required)})
                 else:
                     for comp in club['competitions']:
                         if comp['name'] == competition['name']:
@@ -207,38 +229,45 @@ def purchase_places():
                 flash('Great-booking complete!')
 
                 return render_template('welcome.html', club=club, competitions=competitions,
-                    past_competitions=past_competitions)
+                                        past_competitions=past_competitions)
 
             elif places_required < 1:
                 flash("Please purchase more than one place.")
                 return render_template('welcome.html', club=club, competitions=competitions,
-                    past_competitions=past_competitions)
+                                        past_competitions=past_competitions)
 
             else:
                 flash("Not enough available places anymore.")
                 return render_template('welcome.html', club=club, competitions=competitions,
-                    past_competitions=past_competitions)
+                                        past_competitions=past_competitions)
 
         else:
             flash("Something went wrong-please try again")
             return render_template('welcome.html', club=club, competitions=competitions,
-                past_competitions=past_competitions)
+                                    past_competitions=past_competitions)
 
-    except:
+    except Exception:
         flash("You are not logged in.")
         return redirect(url_for('index'))
 
+
 @app.route('/fullDisplay')
 def full_display():
+    global clubs
+    global competitions
     clubs_list = [club["email"] for club in clubs]
 
     try:
         if session["user_id"] in clubs_list:
+            clubs = load_clubs()
+            competitions = load_competitions()
+
             return render_template('full_display.html', clubs=clubs)
+
         else:
             flash("Please log in to access this page.")
             return redirect(url_for('index'))
 
-    except:
-        flash("Something went wrong-please try again.")
+    except Exception:
+        flash("Please log in to access this page.")
         return redirect(url_for('index'))
